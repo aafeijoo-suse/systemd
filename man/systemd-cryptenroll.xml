@@ -84,6 +84,14 @@
 
     <variablelist>
       <varlistentry>
+        <term><option>--list-slots</option></term>
+
+        <listitem><para>List LUKS2 key slots.</para>
+
+        <para>This is the default option.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--password</option></term>
 
         <listitem><para>Enroll a regular password/passphrase. This command is mostly equivalent to

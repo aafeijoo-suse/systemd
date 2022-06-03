@@ -90,6 +90,7 @@ static int help(void) {
                "\n%sEnroll a security token or authentication credential to a LUKS volume.%s\n\n"
                "  -h --help            Show this help\n"
                "     --version         Show package version\n"
+               "     --list-slots      List slots\n"
                "     --password        Enroll a user-supplied password\n"
                "     --recovery-key    Enroll a recovery key\n"
                "     --pkcs11-token-uri=URI\n"
@@ -137,11 +138,13 @@ static int parse_argv(int argc, char *argv[]) {
                 ARG_FIDO2_WITH_UP,
                 ARG_FIDO2_WITH_UV,
                 ARG_FIDO2_CRED_ALG,
+                ARG_LIST_SLOTS,
         };
 
         static const struct option options[] = {
                 { "help",                         no_argument,       NULL, 'h'                  },
                 { "version",                      no_argument,       NULL, ARG_VERSION          },
+                { "list-slots",                   no_argument,       NULL, ARG_LIST_SLOTS       },
                 { "password",                     no_argument,       NULL, ARG_PASSWORD         },
                 { "recovery-key",                 no_argument,       NULL, ARG_RECOVERY_KEY     },
                 { "pkcs11-token-uri",             required_argument, NULL, ARG_PKCS11_TOKEN_URI },
@@ -158,6 +161,7 @@ static int parse_argv(int argc, char *argv[]) {
         };
 
         int c, r;
+        bool list_slots = false;
 
         assert(argc >= 0);
         assert(argv);
@@ -171,6 +175,14 @@ static int parse_argv(int argc, char *argv[]) {
 
                 case ARG_VERSION:
                         return version();
+
+                case ARG_LIST_SLOTS:
+                        if (arg_enroll_type >= 0)
+                                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
+                                                       "Multiple operations specified at once, refusing.");
+
+                        list_slots = true;
+                        break;
 
                 case ARG_FIDO2_WITH_PIN: {
                         bool lock_with_pin;
@@ -206,7 +218,7 @@ static int parse_argv(int argc, char *argv[]) {
                 }
 
                 case ARG_PASSWORD:
-                        if (arg_enroll_type >= 0)
+                        if (list_slots || arg_enroll_type >= 0)
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
                                                        "Multiple operations specified at once, refusing.");
 
@@ -214,7 +226,7 @@ static int parse_argv(int argc, char *argv[]) {
                         break;
 
                 case ARG_RECOVERY_KEY:
-                        if (arg_enroll_type >= 0)
+                        if (list_slots || arg_enroll_type >= 0)
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
                                                        "Multiple operations specified at once, refusing.");
 
@@ -227,7 +239,7 @@ static int parse_argv(int argc, char *argv[]) {
                         if (streq(optarg, "list"))
                                 return pkcs11_list_tokens();
 
-                        if (arg_enroll_type >= 0 || arg_pkcs11_token_uri)
+                        if (list_slots || arg_enroll_type >= 0 || arg_pkcs11_token_uri)
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
                                                        "Multiple operations specified at once, refusing.");
 
@@ -261,7 +273,7 @@ static int parse_argv(int argc, char *argv[]) {
                         if (streq(optarg, "list"))
                                 return fido2_list_devices();
 
-                        if (arg_enroll_type >= 0 || arg_fido2_device)
+                        if (list_slots || arg_enroll_type >= 0 || arg_fido2_device)
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
                                                        "Multiple operations specified at once, refusing.");
 
@@ -286,7 +298,7 @@ static int parse_argv(int argc, char *argv[]) {
                         if (streq(optarg, "list"))
                                 return tpm2_list_devices();
 
-                        if (arg_enroll_type >= 0 || arg_tpm2_device)
+                        if (list_slots || arg_enroll_type >= 0 || arg_tpm2_device)
                                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
                                                        "Multiple operations specified at once, refusing.");
 
