@@ -27,7 +27,7 @@ if output not in ['code', 'doc']:
 
 with open(header) as file:
     inEnum = False
-    enumValues: typing.List[str] = []
+    enumValues: typing.List[str] = []  # noqa: UP006
     enumName = ''
 
     if output == 'doc':
